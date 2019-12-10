@@ -201,7 +201,7 @@ func Transport(conn *net.TCPConn) {
 	}()
 
 	for {
-		// terminal input has a 4096 byte limit. limits.h: #define PIPE_BUF        4096
+		// terminal input buffer has a 4096 byte limit. limits.h: #define PIPE_BUF        4096
 		n, err := os.Stdin.Read(sendBuf)
 		if err != nil {
 			if err == io.EOF {

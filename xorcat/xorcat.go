@@ -6,6 +6,8 @@ import "net"
 import "os"
 import "strconv"
 
+// import "syscall"
+
 import "github.com/dksslq/xor"
 
 var argKey string = "0123456789" // -k <key>
@@ -21,7 +23,7 @@ var argRIP string   // remote ip address
 var argRport string // remote port
 
 func usageExit(n int) {
-	fmt.Println("xorcat [v1.02]")
+	fmt.Println("xorcat [v1.44]")
 	fmt.Println("Usage:")
 	fmt.Println("\txorcat [-k SECRET] [-l] [-np LPORT] [-s LADDR] [<RADDR> [RPORT]]")
 	os.Exit(n)
@@ -177,47 +179,62 @@ func Transport(conn *net.TCPConn) {
 	recvBuf := make([]byte, 65536, 65536)
 	sendBuf := make([]byte, 65536, 65536)
 
+	// net recv
 	go func() {
 		for {
-			n, err := conn.Read(recvBuf)
-			if err != nil {
-				if err == io.EOF {
-					os.Exit(0)
-				} else {
+			n, cerr := conn.Read(recvBuf)
+
+			if n > 0 {
+				streamxor_recv.Write(recvBuf[:n])
+				n, _ = streamxor_recv.Read(recvBuf)
+
+				_, err := os.Stdout.Write(recvBuf[:n])
+				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-			}
-
-			streamxor_recv.Write(recvBuf[:n])
-			n, _ = streamxor_recv.Read(recvBuf)
-
-			_, err = os.Stdout.Write(recvBuf[:n])
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+			} else {
+				connErrorHandler(cerr)
 			}
 		}
 	}()
 
+	// net send
 	for {
-		// terminal input buffer has a 4096 byte limit. limits.h: #define PIPE_BUF        4096
-		n, err := os.Stdin.Read(sendBuf)
-		if err != nil {
-			if err == io.EOF {
-				os.Exit(0)
-			} else {
-				fmt.Println(err)
-				os.Exit(1)
+		// note - linux:    terminal input buffer 4096 bytes. limits.h: #define PIPE_BUF        4096
+		n, ferr := os.Stdin.Read(sendBuf)
+
+		if n > 0 {
+			streamxor_send.Write(sendBuf[:n])
+			n, _ = streamxor_send.Read(sendBuf)
+
+			_, err := conn.Write(sendBuf[:n])
+
+			connErrorHandler(err)
+		} else {
+			if ferr != nil {
+				// note - windows:    Conn.Close() will send unsent bytes from the underfull buffer, then close its socket
+				// note:    socket actually sends bytes only when the buffer is full
+				conn.Close()
+				if ferr == io.EOF {
+					os.Exit(0)
+				} else {
+					fmt.Println(ferr)
+					os.Exit(1)
+				}
 			}
 		}
+	}
+}
 
-		streamxor_send.Write(sendBuf[:n])
-		n, _ = streamxor_send.Read(sendBuf)
-
-		_, err = conn.Write(sendBuf[:n])
-		if err != nil {
-			fmt.Println(err)
+func connErrorHandler(err error) {
+	if err != nil {
+		if err == io.EOF { // handle connection close
+			os.Exit(0)
+		} else if _, ok := err.(*net.OpError); ok { // handle operror like "connection reset by peer"
+			os.Exit(1)
+		} else { // other errors
+			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 	}

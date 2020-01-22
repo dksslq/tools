@@ -44,7 +44,7 @@ func dieLW(excode int, lastWords string, closers ...io.Closer) {
 		closer.Close()
 	}
 	if lastWords != "" {
-		fmt.Print(lastWords)
+		fmt.Println(lastWords)
 	}
 	// println("exit with:", excode)
 	// panic(excode)
@@ -86,7 +86,7 @@ func init() {
 			val = &argS
 		default:
 			if arg[0] == '-' {
-				dieLW(1, fmt.Sprintf("invalid option -- '%s'\n", arg[1:]))
+				dieLW(1, fmt.Sprintf("invalid option -- '%s'", arg[1:]))
 			}
 			switch "" {
 			// headless args
@@ -95,7 +95,7 @@ func init() {
 			case argRport:
 				argRport = arg
 			default:
-				dieLW(1, fmt.Sprintf("invalid arg %s\n", arg))
+				dieLW(1, fmt.Sprintf("invalid arg %s", arg))
 			}
 		}
 	}
@@ -104,7 +104,7 @@ func init() {
 func main() {
 	laddr, err := net.ResolveTCPAddr("tcp", argS+":"+argNp)
 	if err != nil {
-		dieLW(1, fmt.Sprintf("%s\n", err.Error()))
+		dieLW(1, fmt.Sprintf("%s", err.Error()))
 	}
 
 	if argL {
@@ -122,13 +122,13 @@ func main() {
 func l(laddr *net.TCPAddr, rip, rport string) {
 	listener, err := net.ListenTCP("tcp", laddr)
 	if err != nil {
-		dieLW(1, fmt.Sprintf("%s\n", err.Error()))
+		dieLW(1, fmt.Sprintf("%s", err.Error()))
 	}
 	defer listener.Close()
 
 	conn, err := listener.AcceptTCP()
 	if err != nil {
-		dieLW(1, fmt.Sprintf("%s\n", err.Error()))
+		dieLW(1, fmt.Sprintf("%s", err.Error()))
 	}
 	defer conn.Close()
 
@@ -148,15 +148,15 @@ func l(laddr *net.TCPAddr, rip, rport string) {
 
 	if rip != "" {
 		if remoteAddr.IP.String() != rip {
-			dieLW(1, fmt.Sprintf("invalid connection to [%s] from [%s] %d\n", localAddr.IP.String(), remoteAddr.IP.String(), remoteAddr.Port), conn, listener)
+			dieLW(1, fmt.Sprintf("invalid connection to [%s] from [%s] %d", localAddr.IP.String(), remoteAddr.IP.String(), remoteAddr.Port), conn, listener)
 		} else if rport != "" {
 			irport, err := strconv.Atoi(rport)
 			if err != nil {
-				dieLW(1, fmt.Sprintf("%s\n", err.Error()), conn, listener)
+				dieLW(1, fmt.Sprintf("%s", err.Error()), conn, listener)
 			}
 
 			if remoteAddr.Port != irport {
-				dieLW(1, fmt.Sprintf("invalid connection to [%s] from [%s] %d\n", localAddr.IP.String(), remoteAddr.IP.String(), remoteAddr.Port), conn, listener)
+				dieLW(1, fmt.Sprintf("invalid connection to [%s] from [%s] %d", localAddr.IP.String(), remoteAddr.IP.String(), remoteAddr.Port), conn, listener)
 			}
 		}
 	}
@@ -167,12 +167,12 @@ func l(laddr *net.TCPAddr, rip, rport string) {
 func c(laddr *net.TCPAddr, rip, rport string) {
 	raddr, err := net.ResolveTCPAddr("tcp", rip+":"+rport)
 	if err != nil {
-		dieLW(1, fmt.Sprintf("%s\n", err.Error()))
+		dieLW(1, fmt.Sprintf("%s", err.Error()))
 	}
 
 	conn, err := net.DialTCP("tcp", laddr, raddr)
 	if err != nil {
-		dieLW(1, fmt.Sprintf("%s\n", err.Error()))
+		dieLW(1, fmt.Sprintf("%s", err.Error()))
 	}
 
 	Transport(conn)
@@ -205,7 +205,7 @@ func Transport(conn *net.TCPConn) {
 
 			_, err := os.Stdout.Write(recvBuf[:n])
 			if err != nil {
-				dieLW(1, fmt.Sprintf("%s\n", err.Error()))
+				dieLW(1, fmt.Sprintf("%s", err.Error()))
 			}
 		}
 	}()
@@ -221,7 +221,7 @@ func Transport(conn *net.TCPConn) {
 				// note - windows:    Conn.Close() will send unsent bytes from the underfull buffer, then close its socket
 				die(0, conn)
 			} else {
-				dieLW(1, fmt.Sprintf("%s\n", ferr.Error()))
+				dieLW(1, fmt.Sprintf("%s", ferr.Error()))
 			}
 		}
 
@@ -244,6 +244,6 @@ func connErrorHandler(conn io.Closer, err error) {
 	} else if _, ok := err.(*net.OpError); ok { // handle operror like "connection reset by peer"
 		die(1, conn)
 	} else { // other errors
-		dieLW(1, fmt.Sprintf("%s\n", err.Error()), conn)
+		dieLW(1, fmt.Sprintf("%s", err.Error()), conn)
 	}
 }

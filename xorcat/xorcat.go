@@ -23,9 +23,9 @@ var argRIP string   // remote ip address
 var argRport string // remote port
 
 func usageExit(n int) {
-	fmt.Println("xorcat [v1.78]")
-	fmt.Println("Usage:")
-	fmt.Println("\txorcat [-k SECRET] [-l] [-np LPORT] [-s LADDR] [<RADDR> [RPORT]]")
+	fmt.Fprintln(os.Stderr, "xorcat [v1.78]")
+	fmt.Fprintln(os.Stderr, "Usage:")
+	fmt.Fprintln(os.Stderr, "\txorcat [-k SECRET] [-l] [-np LPORT] [-s LADDR] [<RADDR> [RPORT]]")
 	die(n)
 }
 
@@ -47,7 +47,7 @@ func dieLW(excode int, lastWords string, closers ...io.Closer) {
 		closer.Close()
 	}
 	if lastWords != "" {
-		fmt.Println(lastWords)
+		fmt.Fprintln(os.Stderr, lastWords)
 	}
 	// println("exit with:", excode)
 	// panic(excode)

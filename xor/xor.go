@@ -66,6 +66,4 @@ func main() {
 
 		ofile.Write(buf[:n])
 	}
-
-	streamxor.Close()
 }

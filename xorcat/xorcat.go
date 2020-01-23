@@ -33,7 +33,10 @@ func die(excode int, closers ...io.Closer) {
 	dieLW(excode, "", closers...)
 }
 
+var shit = false
+
 func dieLW(excode int, lastWords string, closers ...io.Closer) {
+	shit = true
 	for _, closer := range closers {
 		// err := closer.Close()
 		// if err != nil {
@@ -136,9 +139,16 @@ func l(laddr *net.TCPAddr, rip, rport string) {
 	go func() {
 		for {
 			conn, err := listener.AcceptTCP()
-			if err != nil {
-				die(1)
+
+			if shit {
+				// oh shit
+				return
 			}
+
+			if err != nil {
+				dieLW(1, fmt.Sprintf("%s", err.Error()))
+			}
+
 			conn.Close()
 		}
 	}()
@@ -186,7 +196,6 @@ func Transport(conn *net.TCPConn) {
 	sendBuf := make([]byte, 65536, 65536)
 
 	// net recv
-	shit := false
 	go func() {
 		for {
 			n, cerr := conn.Read(recvBuf)
@@ -216,7 +225,6 @@ func Transport(conn *net.TCPConn) {
 		n, ferr := os.Stdin.Read(sendBuf)
 
 		if ferr != nil {
-			shit = true
 			if ferr == io.EOF {
 				// note - windows:    Conn.Close() will send unsent bytes from the underfull buffer, then close its socket
 				die(0, conn)
@@ -232,7 +240,6 @@ func Transport(conn *net.TCPConn) {
 		_, err := conn.Write(sendBuf[:n])
 
 		if err != nil {
-			shit = true
 			connErrorHandler(conn, err)
 		}
 	}

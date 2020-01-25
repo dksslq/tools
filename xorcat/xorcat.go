@@ -102,6 +102,10 @@ func init() {
 			}
 		}
 	}
+
+	if len(argKey) == 0 {
+		dieLW(1, "invalid key")
+	}
 }
 
 func main() {
@@ -189,8 +193,14 @@ func c(laddr *net.TCPAddr, rip, rport string) {
 }
 
 func Transport(conn *net.TCPConn) {
-	streamxor_recv := xor.New([]byte(argKey))
-	streamxor_send := xor.New([]byte(argKey))
+	streamxor_recv, err := xor.New([]byte(argKey))
+	if err != nil {
+		dieLW(1, fmt.Sprintf("%s", err.Error()), conn)
+	}
+	streamxor_send, err := xor.New([]byte(argKey))
+	if err != nil {
+		dieLW(1, fmt.Sprintf("%s", err.Error()), conn)
+	}
 
 	recvBuf := make([]byte, 65536, 65536)
 	sendBuf := make([]byte, 65536, 65536)

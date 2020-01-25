@@ -47,7 +47,10 @@ func main() {
 	buf := make([]byte, 65536, 65536)
 
 	key := []byte(argKey)
-	streamxor := xor.New(key)
+	streamxor, err := xor.New(key)
+	if err != nil {
+		log.Fatal("[xor.New] ", err)
+	}
 
 	var n int
 

@@ -216,7 +216,7 @@ func Transport(conn *net.TCPConn) {
 			}
 
 			if cerr != nil {
-				connErrorHandler(conn, cerr)
+				connErrorHandler(cerr, conn)
 			}
 
 			streamxor_recv.Write(recvBuf[:n])
@@ -224,7 +224,7 @@ func Transport(conn *net.TCPConn) {
 
 			_, err := os.Stdout.Write(recvBuf[:n])
 			if err != nil {
-				dieLW(1, fmt.Sprintf("%s", err.Error()))
+				dieLW(1, fmt.Sprintf("%s", err.Error()), conn)
 			}
 		}
 	}()
@@ -239,7 +239,7 @@ func Transport(conn *net.TCPConn) {
 				// note - windows:    Conn.Close() will send unsent bytes from the underfull buffer, then close its socket
 				die(0, conn)
 			} else {
-				dieLW(1, fmt.Sprintf("%s", ferr.Error()))
+				dieLW(1, fmt.Sprintf("%s", ferr.Error()), conn)
 			}
 		}
 
@@ -250,12 +250,12 @@ func Transport(conn *net.TCPConn) {
 		_, err := conn.Write(sendBuf[:n])
 
 		if err != nil {
-			connErrorHandler(conn, err)
+			connErrorHandler(err, conn)
 		}
 	}
 }
 
-func connErrorHandler(conn io.Closer, err error) {
+func connErrorHandler(err error, conn io.Closer) {
 	if err == io.EOF { // handle connection close
 		die(0, conn)
 	} else if _, ok := err.(*net.OpError); ok { // handle operror like "connection reset by peer"

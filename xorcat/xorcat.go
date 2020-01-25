@@ -77,14 +77,23 @@ func init() {
 		case "--help":
 			usageExit(0)
 		case "-k":
+			if i == len(os.Args)-1 {
+				dieLW(1, fmt.Sprintf("no arg found for option -- '%s'", arg[1:]))
+			}
 			isVal = true
 			val = &argKey
 		case "-l":
 			argL = true
 		case "-np":
+			if i == len(os.Args)-1 {
+				dieLW(1, fmt.Sprintf("no arg found for option -- '%s'", arg[1:]))
+			}
 			isVal = true
 			val = &argNp
 		case "-s":
+			if i == len(os.Args)-1 {
+				dieLW(1, fmt.Sprintf("no arg found for option -- '%s'", arg[1:]))
+			}
 			isVal = true
 			val = &argS
 		default:
@@ -101,10 +110,6 @@ func init() {
 				dieLW(1, fmt.Sprintf("invalid arg %s", arg))
 			}
 		}
-	}
-
-	if len(argKey) == 0 {
-		dieLW(1, "invalid key")
 	}
 }
 

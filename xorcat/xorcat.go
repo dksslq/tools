@@ -63,9 +63,17 @@ func init() {
 			continue
 		}
 		if isVal {
+			if len(arg) == 0 {
+				dieLW(1, fmt.Sprintf("empty arg for option -- '%s'", os.Args[i-1][1:]))
+			}
 			*val = arg
 			isVal = false
 			continue
+		} else {
+			// ignore empty headless arg
+			if len(arg) == 0 {
+				continue
+			}
 		}
 
 		switch arg {
@@ -77,7 +85,7 @@ func init() {
 		case "--help":
 			usageExit(0)
 		case "-k":
-			if i == len(os.Args)-1 || 0 == len(os.Args[i+1]) {
+			if i == len(os.Args)-1 {
 				dieLW(1, fmt.Sprintf("no arg found for option -- '%s'", arg[1:]))
 			}
 			isVal = true
@@ -85,13 +93,13 @@ func init() {
 		case "-l":
 			argL = true
 		case "-np":
-			if i == len(os.Args)-1 || 0 == len(os.Args[i+1]) {
+			if i == len(os.Args)-1 {
 				dieLW(1, fmt.Sprintf("no arg found for option -- '%s'", arg[1:]))
 			}
 			isVal = true
 			val = &argNp
 		case "-s":
-			if i == len(os.Args)-1 || 0 == len(os.Args[i+1]) {
+			if i == len(os.Args)-1 {
 				dieLW(1, fmt.Sprintf("no arg found for option -- '%s'", arg[1:]))
 			}
 			isVal = true

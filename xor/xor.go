@@ -7,21 +7,35 @@ import "os"
 
 import "github.com/dksslq/xor"
 
+var argMethS bool
+var argMethC bool
 var argKey string
 var argIfile string
 var argOfile string
 
 func init() {
+	flag.BoolVar(&argMethS, "s", false, "sha512 xor key stream, conflict with -c")
+	flag.BoolVar(&argMethC, "c", false, "raw xor key, conflict with -s")
 	flag.StringVar(&argKey, "k", "0123456789", "Secret string.")
 	flag.StringVar(&argIfile, "i", "", "Input file.")
 	flag.StringVar(&argOfile, "o", "", "Output file.")
 	flag.Parse()
+
+	if argMethS && argMethC {
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if !argMethS && !argMethC {
+		argMethS = true
+	}
 }
 
 func main() {
 	var ifile *os.File
 	var ofile *os.File
 	var err error
+	var streamxor *xor.StreamXOR
 
 	if argIfile == "" {
 		ifile = os.Stdin
@@ -47,7 +61,12 @@ func main() {
 	buf := make([]byte, 65536, 65536)
 
 	key := []byte(argKey)
-	streamxor, err := xor.New(key)
+	switch {
+	case argMethS:
+		streamxor, err = xor.NewC(key, xor.DIARRHEA, 65536)
+	case argMethC:
+		streamxor, err = xor.NewC(key, xor.CYCLE, 65536)
+	}
 	if err != nil {
 		log.Fatal("[xor.New] ", err)
 	}

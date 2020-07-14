@@ -4,21 +4,24 @@ import "flag"
 import "io"
 import "log"
 import "os"
+import "encoding/hex"
 
 import "github.com/dksslq/xor"
 
 var argMethS bool
 var argMethC bool
 var argKey string
+var argHey string
 var argIfile string
 var argOfile string
 
 func init() {
-	flag.BoolVar(&argMethS, "s", false, "sha512 xor key stream, conflict with -c")
-	flag.BoolVar(&argMethC, "c", false, "raw xor key, conflict with -s")
-	flag.StringVar(&argKey, "k", "0123456789", "Secret string.")
-	flag.StringVar(&argIfile, "i", "", "Input file.")
-	flag.StringVar(&argOfile, "o", "", "Output file.")
+	flag.BoolVar(&argMethS, "s", false, "sha512 infinite xor key stream, conflict with -c")
+	flag.BoolVar(&argMethC, "c", false, "raw cycle xor key stream, conflict with -s")
+	flag.StringVar(&argKey, "k", "", "Secret string, conflict with -x (default \"0123456789\")")
+	flag.StringVar(&argHey, "x", "", "hex encoded key string, conflict with -k")
+	flag.StringVar(&argIfile, "i", "", "Input file")
+	flag.StringVar(&argOfile, "o", "", "Output file")
 	flag.Parse()
 
 	if argMethS && argMethC {
@@ -29,12 +32,22 @@ func init() {
 	if !argMethS && !argMethC {
 		argMethS = true
 	}
+
+	if argKey != "" && argHey != "" {
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if argKey == "" && argHey == "" {
+		argKey = "0123456789"
+	}
 }
 
 func main() {
 	var ifile *os.File
 	var ofile *os.File
 	var err error
+	var key []byte
 	var streamxor *xor.StreamXOR
 
 	if argIfile == "" {
@@ -60,7 +73,17 @@ func main() {
 
 	buf := make([]byte, 65536, 65536)
 
-	key := []byte(argKey)
+	if argKey != "" {
+		key = []byte(argKey)
+	} else if argHey != "" {
+		key, err = hex.DecodeString(argHey)
+		if err != nil {
+			log.Fatal("[decode hex key] ", err)
+		}
+	}
+
+	// log.Println("key:", string(key))
+
 	switch {
 	case argMethS:
 		streamxor, err = xor.NewC(key, xor.DIARRHEA, 65536)

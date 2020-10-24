@@ -4,18 +4,28 @@ import "fmt"
 import "log"
 import "os"
 import "io"
+import "flag"
+
+var File, Prefix, Suffix string
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage:\n\thexdump <file>")
-		return
-	}
+	flag.StringVar(&File, "f", "", "file to read, if not specified, read from stdin")
+	flag.StringVar(&Prefix, "p", "", "prefix string for each hexadecimal")
+	flag.StringVar(&Suffix, "s", "", "prefix string for each hexadecimal")
+	flag.Parse()
 
-	file, err := os.Open(os.Args[1])
+	var err error
+	var file *os.File
+
+	if File == "" {
+		file = os.Stdin
+	} else {
+		file, err = os.Open(File)
+		defer file.Close()
+	}
 	if err != nil {
 		log.Fatal("[open file] ", err)
 	}
-	defer file.Close()
 
 	buf := make([]byte, 40960, 40960)
 
@@ -32,7 +42,7 @@ func main() {
 
 		i := 0
 		for i < n {
-			fmt.Printf("%02X", buf[i])
+			fmt.Printf(Prefix+"%02X"+Suffix, buf[i])
 			i++
 		}
 	}

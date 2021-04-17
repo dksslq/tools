@@ -11,7 +11,7 @@ var File, Prefix, Suffix string
 func main() {
 	flag.StringVar(&File, "f", "", "file to read, if not specified, read from stdin")
 	flag.StringVar(&Prefix, "p", "", "prefix string for each hexadecimal")
-	flag.StringVar(&Suffix, "s", "", "prefix string for each hexadecimal")
+	flag.StringVar(&Suffix, "s", "", "suffix string for each hexadecimal")
 	flag.Parse()
 
 	var err error
